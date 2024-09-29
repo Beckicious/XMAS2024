@@ -4,6 +4,7 @@ public class XmasCamera : MonoBehaviour
 {
     public float speed;
     public int scrollMultiplier;
+    public XmasGrid xmasGrid;
 
     public static bool Locked
     {
@@ -48,7 +49,7 @@ public class XmasCamera : MonoBehaviour
     Vector3 ClampPosition(Vector3 position)
     {
         float xMin = XmasGrid.GridHeight / 2;
-        float xMax = XmasGrid.GridWidth - XmasGrid.GridHeight / 2;
+        float xMax = xmasGrid.GridWidth - XmasGrid.GridHeight / 2;
         position.x = Mathf.Clamp(position.x, xMin, xMax);
 
         return position;
