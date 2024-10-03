@@ -1,5 +1,13 @@
 using UnityEngine;
 
+public enum CellType
+{
+    FREE,
+    FIXEDOBSTACLE,
+    SETOBSTACLE,
+    PATH
+}
+
 public class XmasCell : MonoBehaviour
 {
     public const char FREE = '.';
@@ -10,44 +18,68 @@ public class XmasCell : MonoBehaviour
 
     SpriteRenderer spriteRenderer;
 
-    public Color defaultColor;
-    public Color selectedColor;
+    public Color freeColor;
+    public Color setObstacleColor;
     public Color hoverColor;
     public float hoverColorDelta = 0.2f;
 
-    private bool isSelected = false;
-    private bool isHovered = false;
+    public CellType cellType = CellType.FREE;
 
-    public bool debugIsUnclickable = false;
-    public Sprite debugUnclickableSprite;
+    public Sprite freeSprite;
+    public Sprite setObstacleSprite;
+    public Sprite fixedObstacleSprite;
+    public Sprite pathSprite;
+
+    private bool isHovered = false;
 
     public void Click()
     {
-        if (debugIsUnclickable)
+        switch (cellType)
         {
+            case CellType.FIXEDOBSTACLE:
+                return;
+            case CellType.SETOBSTACLE:
+                SetCellType(CellType.FREE);
+                return;
+            case CellType.PATH:
+            case CellType.FREE:
+                SetCellType(CellType.SETOBSTACLE);
+                return;
+        }
+    }
+
+    public void SetCellType(CellType newType)
+    {
+        if (cellType == CellType.FIXEDOBSTACLE)
+        {
+            // no changing that
             return;
         }
 
-        isSelected = !isSelected;
-        SetColor();
-    }
-
-    public void SetSelected()
-    {
-        if (debugIsUnclickable)
+        if (cellType == CellType.SETOBSTACLE && newType == CellType.PATH)
         {
+            // cannot set path on a set obstacle
             return;
         }
 
-        isSelected = true;
-        SetColor();
-    }
+        switch (newType)
+        {
+            case CellType.FIXEDOBSTACLE:
+                spriteRenderer.sprite = fixedObstacleSprite;
+                break;
+            case CellType.SETOBSTACLE:
+                spriteRenderer.sprite = setObstacleSprite;
+                break;
+            case CellType.PATH:
+                spriteRenderer.sprite = pathSprite;
+                break;
+            case CellType.FREE:
+                spriteRenderer.sprite = freeSprite;
+                break;
+        }
 
-    public void SetDebugUnclickable()
-    {
-        spriteRenderer.color = Color.white;
-        spriteRenderer.sprite = debugUnclickableSprite;
-        debugIsUnclickable = true;
+        cellType = newType;
+        SetColor();
     }
 
     private void OnEnable()
@@ -57,17 +89,12 @@ public class XmasCell : MonoBehaviour
 
     private void Start()
     {
-        if (debugIsUnclickable)
-        {
-            return;
-        }
-
         SetColor();
     }
 
     private void OnMouseEnter()
     {
-        if (debugIsUnclickable)
+        if (cellType == CellType.FIXEDOBSTACLE)
         {
             return;
         }
@@ -78,7 +105,7 @@ public class XmasCell : MonoBehaviour
 
     private void OnMouseExit()
     {
-        if (debugIsUnclickable)
+        if (cellType == CellType.FIXEDOBSTACLE)
         {
             return;
         }
@@ -89,7 +116,22 @@ public class XmasCell : MonoBehaviour
 
     private void SetColor()
     {
-        spriteRenderer.color = isSelected ? selectedColor : defaultColor;
+        switch (cellType)
+        {
+            case CellType.FIXEDOBSTACLE:
+                spriteRenderer.color = Color.white;
+                return; // no hover for you
+            case CellType.SETOBSTACLE:
+                spriteRenderer.color = setObstacleColor;
+                break;
+            case CellType.PATH:
+                spriteRenderer.color = Color.white;
+                break;
+            case CellType.FREE:
+                spriteRenderer.color = freeColor;
+                break;
+        }
+
         if (isHovered)
         {
             spriteRenderer.color = Color.Lerp(spriteRenderer.color, hoverColor, hoverColorDelta);
@@ -98,14 +140,16 @@ public class XmasCell : MonoBehaviour
 
     public char ToBoardChar()
     {
-        if (debugIsUnclickable)
+        switch (cellType)
         {
-            return FIXEDOBSTACLE;
+            case CellType.FIXEDOBSTACLE:
+                return FIXEDOBSTACLE;
+            case CellType.SETOBSTACLE:
+                return SETOBSTACLE;
+            case CellType.PATH:
+            case CellType.FREE:
+            default:
+                return FREE;
         }
-        if (isSelected)
-        {
-            return SETOBSTACLE;
-        }
-        return FREE;
     }
 }

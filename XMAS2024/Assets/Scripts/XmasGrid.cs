@@ -1,9 +1,7 @@
-using System.IO;
-using System.Linq;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 public class XmasGrid : MonoBehaviour
 {
@@ -65,7 +63,7 @@ public class XmasGrid : MonoBehaviour
                 gameGrid[y, x] = cell;
                 if (line[x] == XmasCell.FIXEDOBSTACLE)
                 {
-                    cell.SetDebugUnclickable();
+                    cell.SetCellType(CellType.FIXEDOBSTACLE);
                 }
             }
         }
@@ -91,17 +89,65 @@ public class XmasGrid : MonoBehaviour
         LoadEmptyGameGrid();
 
         // load set obstacles from string
-        var lines = Regex.Split(solution, "\r\n|\n|\r");
+        string[] lines = Regex.Split(solution, "\r\n|\n|\r");
+        for (int y = 0; y < GridHeight && y < lines.Length; y++)
+        {
+            for (int x = 0; x < GridWidth && x < lines[y].Length; x++)
+            {
+                if (lines[y][x] == XmasCell.SETOBSTACLE)
+                {
+                    gameGrid[y, x].SetCellType(CellType.SETOBSTACLE);
+                }
+            }
+        }
+
+        ShowShortestPath();
+    }
+
+    private void ShowShortestPath()
+    {
+        RemovePath();
+
+        foreach (var point in GetShortestPath())
+        {
+            gameGrid[point.y, point.x].SetCellType(CellType.PATH);
+        }
+    }
+
+    private void RemovePath()
+    {
         for (int y = 0; y < GridHeight; y++)
         {
             for (int x = 0; x < GridWidth; x++)
             {
-                if (lines[y][x] == XmasCell.SETOBSTACLE)
+                if (gameGrid[y, x].cellType == CellType.PATH)
                 {
-                    gameGrid[y, x].SetSelected();
+                    gameGrid[y, x].SetCellType(CellType.FREE);
                 }
             }
         }
+    }
+
+    private IList<(int y, int x)> GetShortestPath()
+    {
+        // TODO: set start and end when reading the empty board
+        (int, int) start = (0, 0);
+        (int, int) end = (0, GridWidth - 1);
+        for (int y = 0; y < GridHeight; y++)
+        {
+            if (gameGrid[y, 0].cellType == CellType.FREE)
+            {
+                start = (y, 0);
+            }
+            if (gameGrid[y, GridWidth - 1].cellType == CellType.FREE)
+            {
+                end = (y, GridWidth - 1);
+            }
+        }
+
+        // TODO: implement pathfinding
+
+        return new List<(int, int)> { start, end };
     }
 
     public string GetGridAsString()
@@ -125,6 +171,8 @@ public class XmasGrid : MonoBehaviour
         // Load empty grid (levels) and set GridWidth from there
         LoadEmptyGameGrid();
 
+        ShowShortestPath();
+
         // Set camera position
         Vector3 camPos = new Vector3(GridHeight / 2, -GridHeight / 2, Camera.main.transform.position.z);
         Camera.main.transform.position = camPos;
@@ -147,6 +195,7 @@ public class XmasGrid : MonoBehaviour
             if (y >= 0 && y < GridHeight && x >= 0 && x < GridWidth)
             {
                 gameGrid[y, x].Click();
+                ShowShortestPath();
             }
         }
         else if (Input.GetMouseButton(0))
@@ -164,6 +213,7 @@ public class XmasGrid : MonoBehaviour
                 if (y >= 0 && y < GridHeight && x >= 0 && x < GridWidth)
                 {
                     gameGrid[y, x].Click();
+                    ShowShortestPath();
                 }
             }
         }
