@@ -14,15 +14,21 @@ public class XmasGrid : MonoBehaviour
     private Grid helperGrid;
     private XmasCell[,] gameGrid;
 
-    public void LoadEmptyGameGrid()
+    private List<Point> RoutePoints;
+
+    public void LoadEmptyGameGrid(int levelCount = int.MaxValue)
     {
+        levelCount = Mathf.Min(levelFiles.Length, levelCount);
+        RoutePoints = new List<Point>();
+
+        // TODO: find a better solution to form the complete grid from level grids
         StringBuilder[] gameGridLines = new StringBuilder[GridHeight];
         for (int i = 0; i < GridHeight; i++)
         {
             gameGridLines[i] = new StringBuilder();
         }
 
-        for (int l = 0; l < levelFiles.Length; l++)
+        for (int l = 0; l < levelCount; l++)
         {
             string level = levelFiles[l].text;
 
@@ -46,6 +52,8 @@ public class XmasGrid : MonoBehaviour
         }
 
         GridWidth = gameGridLines[0].Length;
+        int levelStartCount = 0;
+        int levelEndCount = 0;
 
         // Setup Grid
         gameGrid = new XmasCell[GridHeight, GridWidth];
@@ -61,12 +69,32 @@ public class XmasGrid : MonoBehaviour
                 cellGO.transform.position = pos;
                 XmasCell cell = cellGO.GetComponent<XmasCell>();
                 gameGrid[y, x] = cell;
-                if (line[x] == XmasCell.FIXEDOBSTACLE)
+                switch (line[x])
                 {
-                    cell.SetCellType(CellType.FIXEDOBSTACLE);
+                    case XmasCell.FIXEDOBSTACLE:
+                        cell.SetCellType(CellType.FIXEDOBSTACLE);
+                        break;
+                    case XmasCell.LEVELSTART:
+                        RoutePoints.Add(new Point(y, x));
+                        levelStartCount++;
+                        break;
+                    case XmasCell.LEVELEND:
+                        RoutePoints.Add(new Point(y, x));
+                        levelEndCount++;
+                        break;
+                    default:
+                        break;
                 }
             }
         }
+
+        // check if maps overlapped correctly ('S' should be overridden by 'E')
+        Debug.Assert(levelStartCount == 1);
+        Debug.Assert(levelEndCount == levelCount);
+        Debug.Assert(RoutePoints.Count == levelCount + 1);
+
+        // sort by X value
+        RoutePoints.Sort((p1, p2) => p1.X.CompareTo(p2.X));
     }
 
     public void ClearGameGrid()
@@ -108,9 +136,9 @@ public class XmasGrid : MonoBehaviour
     {
         RemovePath();
 
-        foreach (var point in GetShortestPath())
+        foreach (Point p in GetShortestPath())
         {
-            gameGrid[point.y, point.x].SetCellType(CellType.PATH);
+            gameGrid[p.Y, p.X].SetCellType(CellType.PATH);
         }
     }
 
@@ -120,7 +148,7 @@ public class XmasGrid : MonoBehaviour
         {
             for (int x = 0; x < GridWidth; x++)
             {
-                if (gameGrid[y, x].cellType == CellType.PATH)
+                if (gameGrid[y, x].Type == CellType.PATH)
                 {
                     gameGrid[y, x].SetCellType(CellType.FREE);
                 }
@@ -128,26 +156,9 @@ public class XmasGrid : MonoBehaviour
         }
     }
 
-    private IList<(int y, int x)> GetShortestPath()
+    private IList<Point> GetShortestPath()
     {
-        // TODO: set start and end when reading the empty board
-        (int, int) start = (0, 0);
-        (int, int) end = (0, GridWidth - 1);
-        for (int y = 0; y < GridHeight; y++)
-        {
-            if (gameGrid[y, 0].cellType == CellType.FREE)
-            {
-                start = (y, 0);
-            }
-            if (gameGrid[y, GridWidth - 1].cellType == CellType.FREE)
-            {
-                end = (y, GridWidth - 1);
-            }
-        }
-
-        // TODO: implement pathfinding
-
-        return new List<(int, int)> { start, end };
+        return new AStar(gameGrid).GetPath(RoutePoints[0], RoutePoints[^1]);
     }
 
     public string GetGridAsString()
@@ -180,6 +191,8 @@ public class XmasGrid : MonoBehaviour
     }
 
     Vector3Int previousPos;
+    CellType currentDraggingType;
+
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
@@ -194,12 +207,16 @@ public class XmasGrid : MonoBehaviour
 
             if (y >= 0 && y < GridHeight && x >= 0 && x < GridWidth)
             {
-                gameGrid[y, x].Click();
+                if (gameGrid[y, x].Click())
+                {
+                    currentDraggingType = gameGrid[y, x].Type;
+                };
                 ShowShortestPath();
             }
         }
         else if (Input.GetMouseButton(0))
         {
+            // Dragging
             Vector3 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector3Int cellPosition = helperGrid.WorldToCell(worldPoint);
 
@@ -212,7 +229,7 @@ public class XmasGrid : MonoBehaviour
 
                 if (y >= 0 && y < GridHeight && x >= 0 && x < GridWidth)
                 {
-                    gameGrid[y, x].Click();
+                    gameGrid[y, x].SetCellType(currentDraggingType);
                     ShowShortestPath();
                 }
             }

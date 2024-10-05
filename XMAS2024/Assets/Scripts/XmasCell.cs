@@ -23,7 +23,7 @@ public class XmasCell : MonoBehaviour
     public Color hoverColor;
     public float hoverColorDelta = 0.2f;
 
-    public CellType cellType = CellType.FREE;
+    public CellType Type { get; private set; } = CellType.FREE;
 
     public Sprite freeSprite;
     public Sprite setObstacleSprite;
@@ -32,31 +32,34 @@ public class XmasCell : MonoBehaviour
 
     private bool isHovered = false;
 
-    public void Click()
+    public bool Click()
     {
-        switch (cellType)
+        switch (Type)
         {
             case CellType.FIXEDOBSTACLE:
-                return;
+                return false;
             case CellType.SETOBSTACLE:
                 SetCellType(CellType.FREE);
-                return;
+                return true;
             case CellType.PATH:
             case CellType.FREE:
                 SetCellType(CellType.SETOBSTACLE);
-                return;
+                return true;
+
+            default:
+                return false;
         }
     }
 
     public void SetCellType(CellType newType)
     {
-        if (cellType == CellType.FIXEDOBSTACLE)
+        if (Type == CellType.FIXEDOBSTACLE)
         {
             // no changing that
             return;
         }
 
-        if (cellType == CellType.SETOBSTACLE && newType == CellType.PATH)
+        if (Type == CellType.SETOBSTACLE && newType == CellType.PATH)
         {
             // cannot set path on a set obstacle
             return;
@@ -78,7 +81,7 @@ public class XmasCell : MonoBehaviour
                 break;
         }
 
-        cellType = newType;
+        Type = newType;
         SetColor();
     }
 
@@ -94,7 +97,7 @@ public class XmasCell : MonoBehaviour
 
     private void OnMouseEnter()
     {
-        if (cellType == CellType.FIXEDOBSTACLE)
+        if (Type == CellType.FIXEDOBSTACLE)
         {
             return;
         }
@@ -105,7 +108,7 @@ public class XmasCell : MonoBehaviour
 
     private void OnMouseExit()
     {
-        if (cellType == CellType.FIXEDOBSTACLE)
+        if (Type == CellType.FIXEDOBSTACLE)
         {
             return;
         }
@@ -116,7 +119,7 @@ public class XmasCell : MonoBehaviour
 
     private void SetColor()
     {
-        switch (cellType)
+        switch (Type)
         {
             case CellType.FIXEDOBSTACLE:
                 spriteRenderer.color = Color.white;
@@ -140,7 +143,7 @@ public class XmasCell : MonoBehaviour
 
     public char ToBoardChar()
     {
-        switch (cellType)
+        switch (Type)
         {
             case CellType.FIXEDOBSTACLE:
                 return FIXEDOBSTACLE;

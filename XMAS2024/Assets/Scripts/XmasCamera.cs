@@ -3,6 +3,7 @@ using UnityEngine;
 public class XmasCamera : MonoBehaviour
 {
     public float speed;
+    public int buttonMultiplier;
     public int scrollMultiplier;
     public XmasGrid xmasGrid;
 
@@ -26,7 +27,7 @@ public class XmasCamera : MonoBehaviour
         float xDelta = Input.GetAxis("Horizontal");
         if (xDelta != 0)
         {
-            AdjustPosition(xDelta);
+            AdjustPosition(xDelta * buttonMultiplier);
         }
 
         float xScrollDelta = -Input.GetAxis("Mouse ScrollWheel");
@@ -48,8 +49,8 @@ public class XmasCamera : MonoBehaviour
 
     Vector3 ClampPosition(Vector3 position)
     {
-        float xMin = XmasGrid.GridHeight / 2;
-        float xMax = xmasGrid.GridWidth - XmasGrid.GridHeight / 2;
+        float xMin = XmasGrid.GridHeight / 1.5f;
+        float xMax = xmasGrid.GridWidth - XmasGrid.GridHeight / 1.5f;
         position.x = Mathf.Clamp(position.x, xMin, xMax);
 
         return position;
