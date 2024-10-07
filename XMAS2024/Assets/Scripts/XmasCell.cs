@@ -122,7 +122,7 @@ public class XmasCell : MonoBehaviour
         switch (Type)
         {
             case CellType.FIXEDOBSTACLE:
-                spriteRenderer.color = Color.white;
+                spriteRenderer.color = new Color(0, 0, 0, 0);
                 return; // no hover for you
             case CellType.SETOBSTACLE:
                 spriteRenderer.color = setObstacleColor;

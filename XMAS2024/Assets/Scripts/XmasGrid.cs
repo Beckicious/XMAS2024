@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using TMPro;
 using UnityEngine;
 
 public class XmasGrid : MonoBehaviour
@@ -10,6 +11,7 @@ public class XmasGrid : MonoBehaviour
     [SerializeField] private GameObject cellGO;
     [SerializeField] private GameObject board;
     [SerializeField] private TextAsset[] levelFiles;
+    public TextMeshProUGUI lengthText;
 
     private Grid helperGrid;
     private XmasCell[,] gameGrid;
@@ -136,10 +138,12 @@ public class XmasGrid : MonoBehaviour
     {
         RemovePath();
 
-        foreach (Point p in GetShortestPath())
+        var path = GetShortestPath();
+        foreach (Point p in path)
         {
             gameGrid[p.Y, p.X].SetCellType(CellType.PATH);
         }
+        lengthText.text = $"Length: {path.Count}";
     }
 
     private void RemovePath()

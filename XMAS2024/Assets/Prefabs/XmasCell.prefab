@@ -99,7 +99,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   freeColor: {r: 0, g: 0, b: 0, a: 0}
-  routePointColor: {r: 1, g: 0, b: 0.8153982, a: 1}
   setObstacleColor: {r: 0.25495726, g: 0.3018868, b: 0.24635102, a: 1}
   hoverColor: {r: 0, g: 0, b: 0, a: 1}
   hoverColorDelta: 0.2
@@ -107,7 +106,6 @@ MonoBehaviour:
   setObstacleSprite: {fileID: 21300000, guid: 94e2955e9a7fea749b18ab28a90aa15f, type: 3}
   fixedObstacleSprite: {fileID: 21300000, guid: e118fc4c4d70cf64b9ec4af16c0334d0, type: 3}
   pathSprite: {fileID: 21300000, guid: 1df3abbafaaf5424c9610e612a51059d, type: 3}
-  isRoutePoint: 0
 --- !u!61 &1395583493577778534
 BoxCollider2D:
   m_ObjectHideFlags: 0
