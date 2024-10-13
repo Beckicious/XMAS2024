@@ -224,8 +224,8 @@ public class XmasGrid : MonoBehaviour
 
     Vector3Int previousPos;
     CellType currentDraggingType;
-    Vector3 lastPanPos;
-    float lastDist = 0;
+    Vector3? lastPanPos;
+    float? lastDist = 0;
 
     void Update()
     {
@@ -234,25 +234,38 @@ public class XmasGrid : MonoBehaviour
             Touch touch1 = Input.GetTouch(0);
             Touch touch2 = Input.GetTouch(1);
 
-            if (touch1.phase == TouchPhase.Began && touch2.phase == TouchPhase.Began)
+            if (touch1.phase == TouchPhase.Moved && touch2.phase == TouchPhase.Moved)
             {
-                lastPanPos = Vector3.Lerp(touch1.position, touch2.position, 0.5f);
-                lastDist = Vector2.Distance(touch1.position, touch2.position);
-            }
-            else if (touch1.phase == TouchPhase.Moved && touch2.phase == TouchPhase.Moved)
-            {
-                float newDist = Vector2.Distance(touch1.position, touch2.position);
-                float touchDist = newDist - lastDist;
-                lastDist = newDist;
+                if (lastDist is null)
+                {
+                    lastDist = Vector2.Distance(touch1.position, touch2.position);
+                }
+                else
+                {
+                    float newDist = Vector2.Distance(touch1.position, touch2.position);
+                    float touchDist = lastDist.Value - newDist;
+                    lastDist = newDist;
+                    Camera.main.orthographicSize += touchDist * 0.1f;
+                }
 
-                Camera.main.orthographicSize += touchDist * 0.1f;
+                if (lastPanPos is null)
+                {
+                    lastPanPos = Vector3.Lerp(touch1.position, touch2.position, 0.5f);
+                }
+                else
+                {
+                    Vector3 panPos = Vector3.Lerp(touch1.position, touch2.position, 0.5f);
+                    Vector3 panDiff = lastPanPos.Value - panPos;
 
-                Vector3 panPos = Vector3.Lerp(touch1.position, touch2.position, 0.5f);
-                Vector3 panDiff = lastPanPos - panPos;
-
-                Camera.main.transform.position += panDiff * 0.01f;
+                    Camera.main.transform.position += panDiff * 0.01f;
+                }
 
                 XmasCamera.ValidatePosition();
+            }
+            else if (touch1.phase == TouchPhase.Ended || touch2.phase == TouchPhase.Ended)
+            {
+                lastPanPos = null;
+                lastDist = null;
             }
         }
         else if (Input.GetMouseButtonDown(0))
