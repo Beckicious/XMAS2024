@@ -245,12 +245,12 @@ public class XmasGrid : MonoBehaviour
                 float touchDist = newDist - lastDist;
                 lastDist = newDist;
 
-                Camera.main.fieldOfView += touchDist * 0.1f;
+                Camera.main.orthographicSize += touchDist * 0.1f;
 
                 Vector3 panPos = Vector3.Lerp(touch1.position, touch2.position, 0.5f);
-                Vector3 panDiff = panPos - lastPanPos;
+                Vector3 panDiff = lastPanPos - panPos;
 
-                Camera.main.transform.position += panDiff;
+                Camera.main.transform.position += panDiff * 0.01f;
 
                 XmasCamera.ValidatePosition();
             }
