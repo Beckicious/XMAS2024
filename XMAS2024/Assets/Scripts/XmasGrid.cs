@@ -3,11 +3,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class XmasGrid : MonoBehaviour
 {
     public const int GridHeight = 32;
-    public int GridWidth = 0; // Set GridWidth dependable on loaded levels
+    private const string PLAYERPREFSGRIDKEY = "xmas-2024-grid";
+    public int GridWidth { get; private set; } = 0; // Set GridWidth dependable on loaded levels
     [SerializeField] private GameObject cellGO;
     [SerializeField] private GameObject board;
     [SerializeField] private TextAsset[] levelFiles;
@@ -78,10 +80,12 @@ public class XmasGrid : MonoBehaviour
                         break;
                     case XmasCell.LEVELSTART:
                         RoutePoints.Add(new Point(y, x));
+                        cell.isLevelStart = true;
                         levelStartCount++;
                         break;
                     case XmasCell.LEVELEND:
                         RoutePoints.Add(new Point(y, x));
+                        cell.isLevelEnd = true;
                         levelEndCount++;
                         break;
                     default:
@@ -134,6 +138,15 @@ public class XmasGrid : MonoBehaviour
         ShowShortestPath();
     }
 
+    public void ResetGrid()
+    {
+        ClearGameGrid();
+
+        LoadEmptyGameGrid();
+
+        ShowShortestPath();
+    }
+
     private void ShowShortestPath()
     {
         RemovePath();
@@ -179,6 +192,13 @@ public class XmasGrid : MonoBehaviour
         return sb.ToString();
     }
 
+    private void SaveGameToPlayerPrefs()
+    {
+        string gridString = GetGridAsString();
+        PlayerPrefs.SetString(PLAYERPREFSGRIDKEY, gridString);
+        PlayerPrefs.Save();
+    }
+
     private void Start()
     {
         helperGrid = GetComponent<Grid>();
@@ -186,20 +206,56 @@ public class XmasGrid : MonoBehaviour
         // Load empty grid (levels) and set GridWidth from there
         LoadEmptyGameGrid();
 
+        if (PlayerPrefs.HasKey(PLAYERPREFSGRIDKEY))
+        {
+            var boardString = PlayerPrefs.GetString(PLAYERPREFSGRIDKEY);
+            LoadSolution(boardString);
+        }
+
         ShowShortestPath();
 
         // Set camera position
         Vector3 camPos = new Vector3(GridHeight / 2, -GridHeight / 2, Camera.main.transform.position.z);
         Camera.main.transform.position = camPos;
         XmasCamera.ValidatePosition();
+
+        InvokeRepeating("SaveGameToPlayerPrefs", 5, 5);
     }
 
     Vector3Int previousPos;
     CellType currentDraggingType;
+    Vector3 lastPanPos;
+    float lastDist = 0;
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.touchCount == 2)
+        {
+            Touch touch1 = Input.GetTouch(0);
+            Touch touch2 = Input.GetTouch(1);
+
+            if (touch1.phase == TouchPhase.Began && touch2.phase == TouchPhase.Began)
+            {
+                lastPanPos = Vector3.Lerp(touch1.position, touch2.position, 0.5f);
+                lastDist = Vector2.Distance(touch1.position, touch2.position);
+            }
+            else if (touch1.phase == TouchPhase.Moved && touch2.phase == TouchPhase.Moved)
+            {
+                float newDist = Vector2.Distance(touch1.position, touch2.position);
+                float touchDist = newDist - lastDist;
+                lastDist = newDist;
+
+                Camera.main.fieldOfView += touchDist * 0.1f;
+
+                Vector3 panPos = Vector3.Lerp(touch1.position, touch2.position, 0.5f);
+                Vector3 panDiff = panPos - lastPanPos;
+
+                Camera.main.transform.position += panDiff;
+
+                XmasCamera.ValidatePosition();
+            }
+        }
+        else if (Input.GetMouseButtonDown(0))
         {
             Vector3 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector3Int cellPosition = helperGrid.WorldToCell(worldPoint);

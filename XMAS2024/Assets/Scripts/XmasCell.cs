@@ -31,6 +31,8 @@ public class XmasCell : MonoBehaviour
     public Sprite pathSprite;
 
     private bool isHovered = false;
+    public bool isLevelStart = false;
+    public bool isLevelEnd = false;
 
     public bool Click()
     {
@@ -143,6 +145,15 @@ public class XmasCell : MonoBehaviour
 
     public char ToBoardChar()
     {
+        if (isLevelEnd)
+        {
+            return LEVELEND;
+        }
+        else if (isLevelStart)
+        {
+            return LEVELSTART;
+        }
+
         switch (Type)
         {
             case CellType.FIXEDOBSTACLE:

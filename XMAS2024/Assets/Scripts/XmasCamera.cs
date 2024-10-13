@@ -49,9 +49,12 @@ public class XmasCamera : MonoBehaviour
 
     Vector3 ClampPosition(Vector3 position)
     {
-        float xMin = XmasGrid.GridHeight / 1.5f;
-        float xMax = xmasGrid.GridWidth - XmasGrid.GridHeight / 1.5f;
+        float xMin = 0;
+        float xMax = xmasGrid.GridWidth;
+        float yMin = -XmasGrid.GridHeight;
+        float yMax = 0;
         position.x = Mathf.Clamp(position.x, xMin, xMax);
+        position.y = Mathf.Clamp(position.y, yMin, yMax);
 
         return position;
     }
