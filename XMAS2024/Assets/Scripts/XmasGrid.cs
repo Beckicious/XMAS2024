@@ -224,8 +224,8 @@ public class XmasGrid : MonoBehaviour
 
     Vector3Int previousPos;
     CellType currentDraggingType;
-    Vector3? lastPanPos;
-    float? lastDist = 0;
+    Vector3? lastPanPos = null;
+    float? lastDist = null;
 
     void Update()
     {
